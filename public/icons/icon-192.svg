@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <!-- Rounded square background -->
+  <rect width="192" height="192" rx="40" ry="40" fill="#4ade80"/>
+
+  <!-- Spray bottle body -->
+  <rect x="90" y="80" width="42" height="64" rx="6" ry="6" fill="#0a0a0a"/>
+
+  <!-- Spray bottle neck -->
+  <rect x="98" y="62" width="16" height="22" rx="4" ry="4" fill="#0a0a0a"/>
+
+  <!-- Trigger -->
+  <path d="M90 95 Q72 95 68 108 L78 108 Q80 100 90 100 Z" fill="#0a0a0a"/>
+
+  <!-- Nozzle -->
+  <rect x="58" y="86" width="32" height="8" rx="4" ry="4" fill="#0a0a0a"/>
+
+  <!-- Spray mist dots -->
+  <circle cx="50" cy="78" r="4" fill="#0a0a0a" opacity="0.7"/>
+  <circle cx="40" cy="72" r="3" fill="#0a0a0a" opacity="0.5"/>
+  <circle cx="44" cy="64" r="2.5" fill="#0a0a0a" opacity="0.4"/>
+  <circle cx="34" cy="82" r="2.5" fill="#0a0a0a" opacity="0.4"/>
+  <circle cx="30" cy="68" r="2" fill="#0a0a0a" opacity="0.3"/>
+</svg>

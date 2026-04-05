@@ -1,5 +1,6 @@
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
+import { InstallButtons } from "@/components/install-button";
 import { SprayCan, Sparkles, Users, ListChecks } from "lucide-react";
 import Link from "next/link";
 
@@ -53,14 +54,7 @@ export default function LandingPage() {
                 Inizia ora
               </Link>
             </Button>
-            <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" size="default" className="w-full text-xs">
-                Scarica su iOS
-              </Button>
-              <Button variant="outline" size="default" className="w-full text-xs">
-                Scarica su Android
-              </Button>
-            </div>
+            <InstallButtons />
           </div>
 
           <p className="text-xs text-text-muted">

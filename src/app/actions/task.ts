@@ -15,8 +15,7 @@ export async function createTask(formData: FormData) {
   const recurrenceType = (formData.get("recurrenceType") as string) || "none";
   const recurrenceRuleRaw = formData.get("recurrenceRule") as string;
   const dailyCount = parseInt(formData.get("dailyCount") as string) || 1;
-  const startDate =
-    (formData.get("startDate") as string) || new Date().toISOString().split("T")[0];
+  const startDate = (formData.get("startDate") as string) || null;
 
   if (!name?.trim()) return { error: "Il nome del task è obbligatorio" };
   if (!roomId || !houseId) return { error: "Stanza e casa sono obbligatorie" };
@@ -312,12 +311,43 @@ export async function completeInstance(instanceId: string, durationSec?: number)
 
   if (!task) return { success: true };
 
-  const dailyCount = task.daily_count ?? 1;
+  // Helper: get next assigned member for rotation
+  async function getNextAssigned(currentAssigned: string | null) {
+    if (task!.assignment_type === "fixed") return currentAssigned;
+    if (task!.assignment_type === "rotation" && currentAssigned) {
+      const { data: rotation } = await supabase
+        .from("task_rotation_order")
+        .select("user_id, position")
+        .eq("task_id", task!.id)
+        .order("position", { ascending: true });
+      if (rotation && rotation.length > 0) {
+        return getNextRotationMember(currentAssigned, rotation);
+      }
+    }
+    return null;
+  }
 
-  // Count how many times this task was completed today
+  // Always-available task (no due_date, no recurrence): just create a new dateless instance
+  if (!instance.due_date && task.recurrence_type === "none") {
+    const nextAssigned = await getNextAssigned(instance.assigned_to);
+    await supabase.from("task_instances").insert({
+      task_id: task.id,
+      house_id: task.house_id,
+      assigned_to: nextAssigned,
+      due_date: null,
+      points_earned: task.points,
+    });
+
+    revalidatePath("/my-tasks");
+    revalidatePath("/stats");
+    return { success: true };
+  }
+
+  const dailyCount = task.daily_count ?? 1;
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}`;
 
+  // Count how many times this task was completed today
   const { count: completedToday } = await supabase
     .from("task_instances")
     .select("id", { count: "exact", head: true })
@@ -327,19 +357,10 @@ export async function completeInstance(instanceId: string, durationSec?: number)
 
   // If daily count not yet reached, create another instance for today
   if ((completedToday ?? 0) < dailyCount) {
-    let nextAssigned = instance.assigned_to;
-
-    if (task.assignment_type === "rotation" && instance.assigned_to) {
-      const { data: rotation } = await supabase
-        .from("task_rotation_order")
-        .select("user_id, position")
-        .eq("task_id", task.id)
-        .order("position", { ascending: true });
-
-      if (rotation && rotation.length > 0) {
-        nextAssigned = getNextRotationMember(instance.assigned_to, rotation);
-      }
-    }
+    const nextAssigned =
+      task.assignment_type === "rotation"
+        ? await getNextAssigned(instance.assigned_to)
+        : instance.assigned_to;
 
     await supabase.from("task_instances").insert({
       task_id: task.id,
@@ -349,8 +370,7 @@ export async function completeInstance(instanceId: string, durationSec?: number)
       points_earned: task.points,
     });
   } else {
-    // Daily count reached — create next occurrence based on TODAY (not due_date)
-    // so overdue tasks don't create instances in the past
+    // Daily count reached — next occurrence based on TODAY
     const nextDate = getNextDueDate(
       todayStr,
       task.recurrence_type,
@@ -363,22 +383,7 @@ export async function completeInstance(instanceId: string, durationSec?: number)
     );
 
     if (nextDate) {
-      let nextAssigned: string | null = null;
-
-      if (task.assignment_type === "fixed") {
-        nextAssigned = instance.assigned_to;
-      } else if (task.assignment_type === "rotation" && instance.assigned_to) {
-        const { data: rotation } = await supabase
-          .from("task_rotation_order")
-          .select("user_id, position")
-          .eq("task_id", task.id)
-          .order("position", { ascending: true });
-
-        if (rotation && rotation.length > 0) {
-          nextAssigned = getNextRotationMember(instance.assigned_to, rotation);
-        }
-      }
-
+      const nextAssigned = await getNextAssigned(instance.assigned_to);
       await supabase.from("task_instances").insert({
         task_id: task.id,
         house_id: task.house_id,
@@ -386,9 +391,19 @@ export async function completeInstance(instanceId: string, durationSec?: number)
         due_date: nextDate,
         points_earned: task.points,
       });
-    } else {
-      // Non-recurring task, daily count reached: archive it
+    } else if (instance.due_date) {
+      // Non-recurring task WITH a date, daily count reached: archive it
       await supabase.from("tasks").update({ archived: true }).eq("id", task.id);
+    } else {
+      // No date, no recurrence but somehow got here: recreate dateless
+      const nextAssigned = await getNextAssigned(instance.assigned_to);
+      await supabase.from("task_instances").insert({
+        task_id: task.id,
+        house_id: task.house_id,
+        assigned_to: nextAssigned,
+        due_date: null,
+        points_earned: task.points,
+      });
     }
   }
 

@@ -69,7 +69,7 @@ export interface TaskInstance {
   task_id: string;
   house_id: string;
   assigned_to: string | null;
-  due_date: string;
+  due_date: string | null;
   status: "pending" | "completed";
   completed_at: string | null;
   completed_by: string | null;

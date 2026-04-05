@@ -42,7 +42,7 @@ export function CreateTaskDialog({
   const [freqCount, setFreqCount] = useState(1);
   const [freqPeriod, setFreqPeriod] = useState<"day" | "week" | "month">("week");
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
-  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [startDate, setStartDate] = useState("");
   const [dailyCount, setDailyCount] = useState(1);
 
   function resetForm() {
@@ -53,7 +53,7 @@ export function CreateTaskDialog({
     setFreqCount(1);
     setFreqPeriod("week");
     setSelectedDays([]);
-    setStartDate(new Date().toISOString().split("T")[0]);
+    setStartDate("");
     setDailyCount(1);
     setError("");
   }
@@ -70,7 +70,7 @@ export function CreateTaskDialog({
     if (recurrenceType === "frequency") {
       return JSON.stringify({
         type: "frequency",
-        count: freqCount,
+        count: freqCount || 1,
         period: freqPeriod,
       });
     }
@@ -186,7 +186,12 @@ export function CreateTaskDialog({
                 htmlFor="task-date"
                 className="text-sm font-medium text-text-secondary"
               >
-                Data
+                Data{" "}
+                {!startDate && (
+                  <span className="font-normal text-text-muted">
+                    (vuoto = sempre disponibile)
+                  </span>
+                )}
               </label>
               <Input
                 id="task-date"
@@ -319,8 +324,8 @@ export function CreateTaskDialog({
                   type="number"
                   min={1}
                   max={99}
-                  value={freqCount}
-                  onChange={(e) => setFreqCount(parseInt(e.target.value) || 1)}
+                  value={freqCount || ""}
+                  onChange={(e) => setFreqCount(parseInt(e.target.value) || 0)}
                   className="w-16 text-center"
                 />
                 <div className="flex gap-1">

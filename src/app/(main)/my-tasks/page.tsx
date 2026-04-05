@@ -1,4 +1,11 @@
-import { Plus, AlertCircle, CalendarDays, CalendarRange, Calendar } from "lucide-react";
+import {
+  Plus,
+  AlertCircle,
+  CalendarDays,
+  CalendarRange,
+  Calendar,
+  Repeat,
+} from "lucide-react";
 import { CreateTaskWithRoomDialog } from "@/components/dashboard/create-task-with-room-dialog";
 import { CompleteTaskButton } from "@/components/dashboard/complete-task-button";
 import { TaskTimerDialog } from "@/components/dashboard/task-timer-dialog";
@@ -107,10 +114,12 @@ export default async function MyTasksPage() {
 
   const { todayStr, in7Str, in30Str } = getDateBounds();
 
-  const overdue = instances.filter((i) => i.due_date < todayStr);
-  const today = instances.filter((i) => i.due_date === todayStr);
-  const next7 = instances.filter((i) => i.due_date > todayStr && i.due_date < in7Str);
-  const next30 = instances.filter((i) => i.due_date >= in7Str && i.due_date < in30Str);
+  const always = instances.filter((i) => !i.due_date);
+  const dated = instances.filter((i) => i.due_date);
+  const overdue = dated.filter((i) => i.due_date! < todayStr);
+  const today = dated.filter((i) => i.due_date === todayStr);
+  const next7 = dated.filter((i) => i.due_date! > todayStr && i.due_date! < in7Str);
+  const next30 = dated.filter((i) => i.due_date! >= in7Str && i.due_date! < in30Str);
 
   const sections = [
     {
@@ -145,6 +154,15 @@ export default async function MyTasksPage() {
       color: "text-text-secondary",
       borderColor: "border-surface-border",
       bgColor: "bg-surface",
+    },
+    {
+      title: "Sempre disponibili",
+      items: always,
+      icon: Repeat,
+      color: "text-blue-400",
+      borderColor: "border-surface-border",
+      bgColor: "bg-surface",
+      hideWhenEmpty: true,
     },
   ];
 

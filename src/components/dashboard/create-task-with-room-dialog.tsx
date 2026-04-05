@@ -49,7 +49,7 @@ export function CreateTaskWithRoomDialog({
   const [freqCount, setFreqCount] = useState(1);
   const [freqPeriod, setFreqPeriod] = useState<"day" | "week" | "month">("week");
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
-  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [startDate, setStartDate] = useState("");
   const [dailyCount, setDailyCount] = useState(1);
 
   function resetForm() {
@@ -75,7 +75,11 @@ export function CreateTaskWithRoomDialog({
   function buildRecurrenceRule(): string | null {
     if (recurrenceType === "none") return null;
     if (recurrenceType === "frequency") {
-      return JSON.stringify({ type: "frequency", count: freqCount, period: freqPeriod });
+      return JSON.stringify({
+        type: "frequency",
+        count: freqCount || 1,
+        period: freqPeriod,
+      });
     }
     if (recurrenceType === "specific_dates") {
       return JSON.stringify({ type: "weekdays", weekdays: selectedDays });
@@ -208,7 +212,12 @@ export function CreateTaskWithRoomDialog({
                 htmlFor="task-date-r"
                 className="text-sm font-medium text-text-secondary"
               >
-                Data
+                Data{" "}
+                {!startDate && (
+                  <span className="font-normal text-text-muted">
+                    (vuoto = sempre disponibile)
+                  </span>
+                )}
               </label>
               <Input
                 id="task-date-r"
@@ -336,8 +345,8 @@ export function CreateTaskWithRoomDialog({
                   type="number"
                   min={1}
                   max={99}
-                  value={freqCount}
-                  onChange={(e) => setFreqCount(parseInt(e.target.value) || 1)}
+                  value={freqCount || ""}
+                  onChange={(e) => setFreqCount(parseInt(e.target.value) || 0)}
                   className="w-16 text-center"
                 />
                 <div className="flex gap-1">

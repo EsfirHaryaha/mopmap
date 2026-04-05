@@ -80,7 +80,11 @@ export function EditTaskDialog({
   function buildRecurrenceRule(): string | null {
     if (recurrenceType === "none") return null;
     if (recurrenceType === "frequency") {
-      return JSON.stringify({ type: "frequency", count: freqCount, period: freqPeriod });
+      return JSON.stringify({
+        type: "frequency",
+        count: freqCount || 1,
+        period: freqPeriod,
+      });
     }
     if (recurrenceType === "specific_dates") {
       return JSON.stringify({ type: "weekdays", weekdays: selectedDays });
@@ -321,8 +325,8 @@ export function EditTaskDialog({
                   type="number"
                   min={1}
                   max={99}
-                  value={freqCount}
-                  onChange={(e) => setFreqCount(parseInt(e.target.value) || 1)}
+                  value={freqCount || ""}
+                  onChange={(e) => setFreqCount(parseInt(e.target.value) || 0)}
                   className="w-16 text-center"
                 />
                 <div className="flex gap-1">

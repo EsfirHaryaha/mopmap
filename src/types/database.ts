@@ -58,18 +58,24 @@ export interface Task {
   assigned_to: string | null;
   recurrence_type: RecurrenceType;
   recurrence_rule: RecurrenceRule | null;
+  daily_count: number;
+  archived: boolean;
   created_by: string;
   created_at: string;
 }
 
-export interface TaskCompletion {
+export interface TaskInstance {
   id: string;
   task_id: string;
-  completed_by: string;
-  completed_at: string;
+  house_id: string;
+  assigned_to: string | null;
+  due_date: string;
+  status: "pending" | "completed";
+  completed_at: string | null;
+  completed_by: string | null;
   points_earned: number;
   duration_sec: number | null;
-  profile?: Profile;
+  created_at: string;
 }
 
 export interface TaskRotationOrder {

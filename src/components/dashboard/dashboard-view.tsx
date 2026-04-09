@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LayoutGrid, List, Plus, Pencil } from "lucide-react";
+import { LayoutGrid, List, Plus } from "lucide-react";
 import { CreateRoomDialog } from "./create-room-dialog";
 import { CreateTaskWithRoomDialog } from "./create-task-with-room-dialog";
 import { CompleteTaskButton } from "./complete-task-button";
@@ -176,61 +176,60 @@ export function DashboardView({
                         ) : (
                           <div className="h-6 w-6 shrink-0" />
                         )}
-                        <div className="flex flex-1 flex-col gap-0.5">
-                          <span className="text-sm font-semibold text-text-primary">
-                            {task.name}
-                          </span>
-                          <div className="flex flex-wrap items-center gap-1.5 text-xs text-text-muted">
-                            {task.instance_assigned_to &&
-                              memberMap[task.instance_assigned_to] && (
-                                <span>{memberMap[task.instance_assigned_to]}</span>
-                              )}
-                            {task.instance_due_date && (
-                              <>
-                                <span>·</span>
-                                <span
-                                  className={
-                                    task.is_overdue ? "text-red-error font-semibold" : ""
-                                  }
-                                >
-                                  {task.instance_due_date === todayStr
-                                    ? "Oggi"
-                                    : new Date(
-                                        task.instance_due_date + "T00:00:00"
-                                      ).toLocaleDateString("it-IT", {
-                                        day: "numeric",
-                                        month: "short",
-                                      })}
+                        <EditTaskDialog
+                          task={task}
+                          members={members}
+                          currentDueDate={task.instance_due_date ?? undefined}
+                          trigger={
+                            <button className="flex flex-1 items-center gap-3 text-left">
+                              <div className="flex flex-1 flex-col gap-0.5">
+                                <span className="text-sm font-semibold text-text-primary">
+                                  {task.name}
                                 </span>
-                              </>
-                            )}
-                            {task.recurrence_type !== "none" && (
-                              <>
-                                <span>·</span>
-                                <span className="text-green-fresh">Ricorrente</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <div className="flex items-center gap-0.5">
-                            {Array.from({ length: task.points }).map((_, i) => (
-                              <span key={i} className="text-xs text-yellow-accent">
-                                ★
-                              </span>
-                            ))}
-                          </div>
-                          <EditTaskDialog
-                            task={task}
-                            members={members}
-                            currentDueDate={task.instance_due_date ?? undefined}
-                            trigger={
-                              <button className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary">
-                                <Pencil size={14} />
-                              </button>
-                            }
-                          />
-                        </div>
+                                <div className="flex flex-wrap items-center gap-1.5 text-xs text-text-muted">
+                                  {task.instance_assigned_to &&
+                                    memberMap[task.instance_assigned_to] && (
+                                      <span>{memberMap[task.instance_assigned_to]}</span>
+                                    )}
+                                  {task.instance_due_date && (
+                                    <>
+                                      <span>·</span>
+                                      <span
+                                        className={
+                                          task.is_overdue
+                                            ? "text-red-error font-semibold"
+                                            : ""
+                                        }
+                                      >
+                                        {task.instance_due_date === todayStr
+                                          ? "Oggi"
+                                          : new Date(
+                                              task.instance_due_date + "T00:00:00"
+                                            ).toLocaleDateString("it-IT", {
+                                              day: "numeric",
+                                              month: "short",
+                                            })}
+                                      </span>
+                                    </>
+                                  )}
+                                  {task.recurrence_type !== "none" && (
+                                    <>
+                                      <span>·</span>
+                                      <span className="text-green-fresh">Ricorrente</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-0.5">
+                                {Array.from({ length: task.points }).map((_, i) => (
+                                  <span key={i} className="text-xs text-yellow-accent">
+                                    ★
+                                  </span>
+                                ))}
+                              </div>
+                            </button>
+                          }
+                        />
                       </div>
                     ))}
                   </div>

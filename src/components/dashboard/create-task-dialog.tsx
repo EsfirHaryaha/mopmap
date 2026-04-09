@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,6 @@ export function CreateTaskDialog({
   members,
   trigger,
 }: CreateTaskDialogProps) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -109,7 +107,6 @@ export function CreateTaskDialog({
     } else {
       setOpen(false);
       resetForm();
-      router.refresh();
     }
   }
 

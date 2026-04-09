@@ -339,6 +339,7 @@ export async function completeInstance(instanceId: string, durationSec?: number)
     });
 
     revalidatePath("/my-tasks");
+    revalidatePath("/dashboard");
     revalidatePath("/stats");
     return { success: true };
   }
@@ -347,16 +348,19 @@ export async function completeInstance(instanceId: string, durationSec?: number)
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}`;
 
-  // Count how many times this task was completed today
-  const { count: completedToday } = await supabase
+  // Use the instance's original due_date for daily count tracking
+  const instanceDueDate = instance.due_date ?? todayStr;
+
+  // Count how many times this task was completed for this due_date
+  const { count: completedForDate } = await supabase
     .from("task_instances")
     .select("id", { count: "exact", head: true })
     .eq("task_id", task.id)
     .eq("status", "completed")
-    .eq("due_date", todayStr);
+    .eq("due_date", instanceDueDate);
 
-  // If daily count not yet reached, create another instance for today
-  if ((completedToday ?? 0) < dailyCount) {
+  // If daily count not yet reached, create another instance for the same due_date
+  if ((completedForDate ?? 0) < dailyCount) {
     const nextAssigned =
       task.assignment_type === "rotation"
         ? await getNextAssigned(instance.assigned_to)
@@ -366,11 +370,11 @@ export async function completeInstance(instanceId: string, durationSec?: number)
       task_id: task.id,
       house_id: task.house_id,
       assigned_to: nextAssigned,
-      due_date: todayStr,
+      due_date: instanceDueDate,
       points_earned: task.points,
     });
   } else {
-    // Daily count reached — next occurrence based on TODAY
+    // Daily count reached — next occurrence based on TODAY (actual completion date)
     const nextDate = getNextDueDate(
       todayStr,
       task.recurrence_type,
@@ -408,6 +412,7 @@ export async function completeInstance(instanceId: string, durationSec?: number)
   }
 
   revalidatePath("/my-tasks");
+  revalidatePath("/dashboard");
   revalidatePath("/stats");
   return { success: true };
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { uncompleteInstance } from "@/app/actions/task";
 
 interface UncompleteTaskButtonProps {
@@ -9,7 +8,6 @@ interface UncompleteTaskButtonProps {
 }
 
 export function UncompleteTaskButton({ instanceId }: UncompleteTaskButtonProps) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   async function handleUncomplete() {
@@ -17,7 +15,6 @@ export function UncompleteTaskButton({ instanceId }: UncompleteTaskButtonProps) 
     setLoading(true);
     await uncompleteInstance(instanceId);
     setLoading(false);
-    router.refresh();
   }
 
   return (

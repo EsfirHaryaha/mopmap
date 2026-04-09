@@ -17,22 +17,17 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Single query with join instead of two sequential queries
   const { data: membership } = await supabase
     .from("house_members")
-    .select("house_id")
+    .select("house_id, houses(id, name, invite_code)")
     .eq("user_id", user!.id)
     .limit(1)
     .single();
 
-  let house: { id: string; name: string; invite_code: string } | null = null;
-  if (membership) {
-    const { data } = await supabase
-      .from("houses")
-      .select("id, name, invite_code")
-      .eq("id", membership.house_id)
-      .single();
-    house = data;
-  }
+  const house = membership
+    ? (membership.houses as unknown as { id: string; name: string; invite_code: string })
+    : null;
 
   if (!house) {
     return (
@@ -54,12 +49,28 @@ export default async function DashboardPage() {
     );
   }
 
-  // Fetch rooms
-  const { data: roomData } = await supabase
-    .from("rooms")
-    .select("id, name, icon")
-    .eq("house_id", house.id)
-    .order("created_at", { ascending: true });
+  // Fetch rooms, tasks, and members in parallel
+  const [{ data: roomData }, { data: allTasks }, { data: memberData }] =
+    await Promise.all([
+      supabase
+        .from("rooms")
+        .select("id, name, icon")
+        .eq("house_id", house.id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("tasks")
+        .select(
+          "id, name, description, points, assignment_type, assigned_to, recurrence_type, recurrence_rule, daily_count, room_id"
+        )
+        .eq("house_id", house.id)
+        .eq("archived", false)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("house_members")
+        .select("user_id, profiles(name)")
+        .eq("house_id", house.id),
+    ]);
+
   const rooms = roomData ?? [];
 
   if (rooms.length === 0) {
@@ -73,16 +84,6 @@ export default async function DashboardPage() {
       </div>
     );
   }
-
-  // Fetch all active tasks for the house
-  const { data: allTasks } = await supabase
-    .from("tasks")
-    .select(
-      "id, name, description, points, assignment_type, assigned_to, recurrence_type, recurrence_rule, daily_count, room_id"
-    )
-    .eq("house_id", house.id)
-    .eq("archived", false)
-    .order("created_at", { ascending: true });
 
   // Fetch pending instances for all tasks
   const taskIds = (allTasks ?? []).map((t) => t.id);
@@ -105,12 +106,6 @@ export default async function DashboardPage() {
       }
     }
   }
-
-  // Fetch members
-  const { data: memberData } = await supabase
-    .from("house_members")
-    .select("user_id, profiles(name)")
-    .eq("house_id", house.id);
 
   const members = (memberData ?? []).map((m) => ({
     user_id: m.user_id,

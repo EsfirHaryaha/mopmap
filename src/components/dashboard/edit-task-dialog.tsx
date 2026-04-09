@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Save, Trash2, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,7 +44,6 @@ export function EditTaskDialog({
   trigger,
   currentDueDate,
 }: EditTaskDialogProps) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -67,9 +65,7 @@ export function EditTaskDialog({
     task.recurrence_rule?.weekdays ?? []
   );
   const [dailyCount, setDailyCount] = useState(task.daily_count ?? 1);
-  const [dueDate, setDueDate] = useState(
-    currentDueDate ?? new Date().toISOString().split("T")[0]
-  );
+  const [dueDate, setDueDate] = useState(currentDueDate ?? "");
 
   function toggleDay(day: number) {
     setSelectedDays((prev) =>
@@ -103,7 +99,7 @@ export function EditTaskDialog({
       formData.set("assignedTo", assignedTo);
     formData.set("recurrenceType", recurrenceType);
     formData.set("dailyCount", String(dailyCount));
-    formData.set("dueDate", dueDate);
+    if (dueDate) formData.set("dueDate", dueDate);
     const rule = buildRecurrenceRule();
     if (rule) formData.set("recurrenceRule", rule);
 
@@ -114,7 +110,6 @@ export function EditTaskDialog({
       setError(result.error);
     } else {
       setOpen(false);
-      router.refresh();
     }
   }
 
@@ -130,7 +125,6 @@ export function EditTaskDialog({
       setError(result.error);
     } else {
       setOpen(false);
-      router.refresh();
     }
   }
 
@@ -146,7 +140,6 @@ export function EditTaskDialog({
       setError(result.error);
     } else {
       setOpen(false);
-      router.refresh();
     }
   }
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { completeInstance } from "@/app/actions/task";
 
 interface CompleteTaskButtonProps {
@@ -9,7 +8,6 @@ interface CompleteTaskButtonProps {
 }
 
 export function CompleteTaskButton({ instanceId }: CompleteTaskButtonProps) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -21,10 +19,6 @@ export function CompleteTaskButton({ instanceId }: CompleteTaskButtonProps) {
 
     if (!result.error) {
       setDone(true);
-      setTimeout(() => {
-        setDone(false);
-        router.refresh();
-      }, 600);
     }
   }
 

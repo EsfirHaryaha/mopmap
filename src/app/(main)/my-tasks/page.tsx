@@ -66,31 +66,33 @@ export default async function MyTasksPage() {
   let instances: Instance[] = [];
 
   if (membership) {
-    const { data: roomData } = await supabase
-      .from("rooms")
-      .select("id, name, icon")
-      .eq("house_id", membership.house_id);
-    rooms = roomData ?? [];
+    // Fetch rooms, members, and instances in parallel
+    const [{ data: roomData }, { data: memberData }, { data: instanceData }] =
+      await Promise.all([
+        supabase
+          .from("rooms")
+          .select("id, name, icon")
+          .eq("house_id", membership.house_id),
+        supabase
+          .from("house_members")
+          .select("user_id, profiles(name)")
+          .eq("house_id", membership.house_id),
+        supabase
+          .from("task_instances")
+          .select(
+            "id, due_date, points_earned, assigned_to, task_id, tasks(name, description, room_id, rooms(name, icon))"
+          )
+          .eq("house_id", membership.house_id)
+          .eq("status", "pending")
+          .or(`assigned_to.eq.${user!.id},assigned_to.is.null`)
+          .order("due_date", { ascending: true }),
+      ]);
 
-    const { data: memberData } = await supabase
-      .from("house_members")
-      .select("user_id, profiles(name)")
-      .eq("house_id", membership.house_id);
+    rooms = roomData ?? [];
     members = (memberData ?? []).map((m) => ({
       user_id: m.user_id,
       name: (m.profiles as unknown as { name: string })?.name ?? "",
     }));
-
-    // Fetch pending instances with task + room info
-    const { data: instanceData } = await supabase
-      .from("task_instances")
-      .select(
-        "id, due_date, points_earned, assigned_to, task_id, tasks(name, description, room_id, rooms(name, icon))"
-      )
-      .eq("house_id", membership.house_id)
-      .eq("status", "pending")
-      .or(`assigned_to.eq.${user!.id},assigned_to.is.null`)
-      .order("due_date", { ascending: true });
 
     instances = (instanceData ?? []).map((inst) => {
       const task = inst.tasks as unknown as {

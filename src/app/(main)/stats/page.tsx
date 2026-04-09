@@ -25,16 +25,18 @@ export default async function StatsPage() {
     );
   }
 
-  const { data: completed } = await supabase
-    .from("task_instances")
-    .select("completed_by, points_earned, completed_at, duration_sec")
-    .eq("house_id", membership.house_id)
-    .eq("status", "completed");
-
-  const { data: memberData } = await supabase
-    .from("house_members")
-    .select("user_id, profiles(name)")
-    .eq("house_id", membership.house_id);
+  // Fetch completed instances and members in parallel
+  const [{ data: completed }, { data: memberData }] = await Promise.all([
+    supabase
+      .from("task_instances")
+      .select("completed_by, points_earned, completed_at, duration_sec")
+      .eq("house_id", membership.house_id)
+      .eq("status", "completed"),
+    supabase
+      .from("house_members")
+      .select("user_id, profiles(name)")
+      .eq("house_id", membership.house_id),
+  ]);
 
   const members = (memberData ?? []).map((m) => ({
     user_id: m.user_id,

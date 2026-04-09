@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { createHouse } from "@/app/actions/house";
 
 export function CreateHouseDialog() {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,7 +22,6 @@ export function CreateHouseDialog() {
       setError(result.error);
     } else {
       setOpen(false);
-      router.refresh();
     }
   }
 

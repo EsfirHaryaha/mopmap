@@ -19,72 +19,78 @@ export default async function RoomPage({ params }: { params: Promise<{ id: strin
 
   if (!room) notFound();
 
-  // Active tasks
-  const { data: activeTasks } = await supabase
-    .from("tasks")
-    .select(
-      "id, name, description, points, assignment_type, assigned_to, recurrence_type, recurrence_rule, daily_count, room_id"
-    )
-    .eq("room_id", room.id)
-    .eq("archived", false)
-    .order("created_at", { ascending: true });
+  // Fetch active tasks, archived tasks, and members in parallel
+  const [{ data: activeTasks }, { data: archivedTasks }, { data: memberData }] =
+    await Promise.all([
+      supabase
+        .from("tasks")
+        .select(
+          "id, name, description, points, assignment_type, assigned_to, recurrence_type, recurrence_rule, daily_count, room_id"
+        )
+        .eq("room_id", room.id)
+        .eq("archived", false)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("tasks")
+        .select("id, name, description, points")
+        .eq("room_id", room.id)
+        .eq("archived", true)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("house_members")
+        .select("user_id, profiles(name)")
+        .eq("house_id", room.house_id),
+    ]);
 
-  // Archived tasks
-  const { data: archivedTasks } = await supabase
-    .from("tasks")
-    .select("id, name, description, points")
-    .eq("room_id", room.id)
-    .eq("archived", true)
-    .order("created_at", { ascending: false });
-
-  // Get completed instances for archived tasks (most recent per task)
+  // Fetch archived instances and pending instances in parallel
   const archivedTaskIds = (archivedTasks ?? []).map((t) => t.id);
-  const archivedInstances: Record<string, string> = {};
-  if (archivedTaskIds.length > 0) {
-    const { data: instData } = await supabase
-      .from("task_instances")
-      .select("id, task_id")
-      .in("task_id", archivedTaskIds)
-      .eq("status", "completed")
-      .order("completed_at", { ascending: false });
+  const activeTaskIds = (activeTasks ?? []).map((t) => t.id);
 
-    for (const inst of instData ?? []) {
-      if (!archivedInstances[inst.task_id]) {
-        archivedInstances[inst.task_id] = inst.id;
-      }
+  const [archivedInstResult, pendingInstResult] = await Promise.all([
+    archivedTaskIds.length > 0
+      ? supabase
+          .from("task_instances")
+          .select("id, task_id")
+          .in("task_id", archivedTaskIds)
+          .eq("status", "completed")
+          .order("completed_at", { ascending: false })
+      : Promise.resolve({ data: [] as { id: string; task_id: string }[] }),
+    activeTaskIds.length > 0
+      ? supabase
+          .from("task_instances")
+          .select("id, task_id, assigned_to, due_date")
+          .in("task_id", activeTaskIds)
+          .eq("status", "pending")
+          .order("due_date", { ascending: true })
+      : Promise.resolve({
+          data: [] as {
+            id: string;
+            task_id: string;
+            assigned_to: string | null;
+            due_date: string;
+          }[],
+        }),
+  ]);
+
+  const archivedInstances: Record<string, string> = {};
+  for (const inst of archivedInstResult.data ?? []) {
+    if (!archivedInstances[inst.task_id]) {
+      archivedInstances[inst.task_id] = inst.id;
     }
   }
 
-  // Next pending instance per active task
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}`;
 
-  const activeTaskIds = (activeTasks ?? []).map((t) => t.id);
   const nextInstance: Record<
     string,
     { id: string; assigned_to: string | null; due_date: string }
   > = {};
-
-  if (activeTaskIds.length > 0) {
-    const { data: pendingData } = await supabase
-      .from("task_instances")
-      .select("id, task_id, assigned_to, due_date")
-      .in("task_id", activeTaskIds)
-      .eq("status", "pending")
-      .order("due_date", { ascending: true });
-
-    for (const inst of pendingData ?? []) {
-      if (!nextInstance[inst.task_id]) {
-        nextInstance[inst.task_id] = inst;
-      }
+  for (const inst of pendingInstResult.data ?? []) {
+    if (!nextInstance[inst.task_id]) {
+      nextInstance[inst.task_id] = inst;
     }
   }
-
-  // Members
-  const { data: memberData } = await supabase
-    .from("house_members")
-    .select("user_id, profiles(name)")
-    .eq("house_id", room.house_id);
 
   const members = (memberData ?? []).map((m) => ({
     user_id: m.user_id,

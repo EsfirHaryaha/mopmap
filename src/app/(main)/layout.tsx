@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import { AppHeader } from "@/components/layout/app-header";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { createClient } from "@/lib/supabase/server";
@@ -13,21 +11,15 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
   let houseName: string | null = null;
   if (user) {
+    // Single query with join instead of two sequential queries
     const { data: membership } = await supabase
       .from("house_members")
-      .select("house_id")
+      .select("houses(name)")
       .eq("user_id", user.id)
       .limit(1)
       .single();
 
-    if (membership) {
-      const { data: house } = await supabase
-        .from("houses")
-        .select("name")
-        .eq("id", membership.house_id)
-        .single();
-      houseName = house?.name ?? null;
-    }
+    houseName = (membership?.houses as unknown as { name: string })?.name ?? null;
   }
 
   return (

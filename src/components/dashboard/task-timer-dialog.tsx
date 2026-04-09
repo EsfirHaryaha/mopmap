@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Play, Pause, Square, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,6 @@ export function TaskTimerDialog({
   points,
   trigger,
 }: TaskTimerDialogProps) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(false);
@@ -93,7 +91,6 @@ export function TaskTimerDialog({
     setCompleting(false);
     setElapsed(0);
     setOpen(false);
-    router.refresh();
   }
 
   return (

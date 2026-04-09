@@ -10,7 +10,7 @@ import { CreateTaskWithRoomDialog } from "@/components/dashboard/create-task-wit
 import { CompleteTaskButton } from "@/components/dashboard/complete-task-button";
 import { TaskTimerDialog } from "@/components/dashboard/task-timer-dialog";
 import { createClient } from "@/lib/supabase/server";
-import { getUser, getMembership } from "@/lib/supabase/cached";
+import { getUserId, getMembership } from "@/lib/supabase/cached";
 
 function pad(n: number) {
   return n.toString().padStart(2, "0");
@@ -50,7 +50,7 @@ interface Instance {
 
 export default async function MyTasksPage() {
   const supabase = await createClient();
-  const [user, membership] = await Promise.all([getUser(), getMembership()]);
+  const [userId, membership] = await Promise.all([getUserId(), getMembership()]);
 
   let rooms: { id: string; name: string; icon: string }[] = [];
   let members: { user_id: string; name: string }[] = [];
@@ -74,7 +74,7 @@ export default async function MyTasksPage() {
           )
           .eq("house_id", membership.house_id)
           .eq("status", "pending")
-          .or(`assigned_to.eq.${user!.id},assigned_to.is.null`)
+          .or(`assigned_to.eq.${userId},assigned_to.is.null`)
           .order("due_date", { ascending: true }),
       ]);
 

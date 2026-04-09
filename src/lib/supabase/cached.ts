@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { headers } from "next/headers";
 import { createClient } from "./server";
 
 /**
@@ -14,17 +15,28 @@ export const getUser = cache(async () => {
 });
 
 /**
+ * Get user ID from middleware header (fast) or fallback to getUser().
+ */
+export const getUserId = cache(async (): Promise<string | null> => {
+  const h = await headers();
+  const fromMiddleware = h.get("x-user-id");
+  if (fromMiddleware) return fromMiddleware;
+  const user = await getUser();
+  return user?.id ?? null;
+});
+
+/**
  * Cached per-request: membership + house info in una sola query.
  */
 export const getMembership = cache(async () => {
-  const user = await getUser();
-  if (!user) return null;
+  const userId = await getUserId();
+  if (!userId) return null;
 
   const supabase = await createClient();
   const { data } = await supabase
     .from("house_members")
     .select("house_id, houses(id, name, invite_code)")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .limit(1)
     .single();
 

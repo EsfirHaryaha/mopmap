@@ -55,5 +55,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Pass user id via header so pages don't need to call getUser() again
+  if (user) {
+    supabaseResponse.headers.set("x-user-id", user.id);
+  }
+
   return supabaseResponse;
 }

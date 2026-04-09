@@ -1,10 +1,10 @@
 import { StatsContent } from "@/components/dashboard/stats-content";
 import { createClient } from "@/lib/supabase/server";
-import { getUser, getMembership } from "@/lib/supabase/cached";
+import { getUserId, getMembership } from "@/lib/supabase/cached";
 
 export default async function StatsPage() {
   const supabase = await createClient();
-  const [user, membership] = await Promise.all([getUser(), getMembership()]);
+  const [userId, membership] = await Promise.all([getUserId(), getMembership()]);
 
   if (!membership) {
     return (
@@ -42,7 +42,7 @@ export default async function StatsPage() {
         duration_sec: c.duration_sec,
       }))}
       members={members}
-      userId={user!.id}
+      userId={userId!}
     />
   );
 }

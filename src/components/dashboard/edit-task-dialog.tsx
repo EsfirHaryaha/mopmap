@@ -182,10 +182,12 @@ export function EditTaskDialog({
               >
                 Descrizione (opzionale)
               </label>
-              <Input
+              <textarea
                 id="edit-desc"
                 name="description"
                 defaultValue={task.description ?? ""}
+                rows={3}
+                className="flex w-full rounded-xl border-2 border-surface-border bg-surface px-4 py-2 text-sm text-text-primary placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-fresh focus-visible:ring-offset-2 focus-visible:ring-offset-background resize-none"
               />
             </div>
 

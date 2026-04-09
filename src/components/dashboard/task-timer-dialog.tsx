@@ -9,6 +9,7 @@ import { completeInstance } from "@/app/actions/task";
 interface TaskTimerDialogProps {
   instanceId: string;
   taskName: string;
+  taskDescription?: string | null;
   roomIcon: string;
   roomName: string;
   points: number;
@@ -28,6 +29,7 @@ function formatTime(sec: number): string {
 export function TaskTimerDialog({
   instanceId,
   taskName,
+  taskDescription,
   roomIcon,
   roomName,
   points,
@@ -112,7 +114,7 @@ export function TaskTimerDialog({
 
           <Dialog.Description className="sr-only">Timer per il task</Dialog.Description>
 
-          <div className="flex items-center gap-2 pb-6 text-xs text-text-muted">
+          <div className="flex items-center gap-2 text-xs text-text-muted">
             <span>{roomIcon}</span>
             <span>{roomName}</span>
             {points > 0 && (
@@ -122,6 +124,14 @@ export function TaskTimerDialog({
               </>
             )}
           </div>
+
+          {taskDescription && (
+            <p className="whitespace-pre-wrap text-sm text-text-secondary pb-2">
+              {taskDescription}
+            </p>
+          )}
+
+          <div className="pb-2" />
 
           {/* Timer display */}
           <div className="flex flex-col items-center gap-6">

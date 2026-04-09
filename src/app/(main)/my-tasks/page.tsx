@@ -205,6 +205,7 @@ export default async function MyTasksPage() {
                     key={inst.id}
                     instanceId={inst.id}
                     taskName={inst.task_name}
+                    taskDescription={inst.task_description}
                     roomIcon={inst.room_icon}
                     roomName={inst.room_name}
                     points={inst.points_earned}

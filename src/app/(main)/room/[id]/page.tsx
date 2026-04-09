@@ -1,4 +1,4 @@
-import { ArrowLeft, Plus, Pencil } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { CreateTaskDialog } from "@/components/dashboard/create-task-dialog";
 import { EditTaskDialog } from "@/components/dashboard/edit-task-dialog";
 import { CompleteTaskButton } from "@/components/dashboard/complete-task-button";
@@ -149,55 +149,57 @@ export default async function RoomPage({ params }: { params: Promise<{ id: strin
                 ) : (
                   <div className="h-6 w-6 shrink-0" />
                 )}
-                <div className="flex flex-1 flex-col gap-0.5">
-                  <span className="font-semibold text-text-primary">{task.name}</span>
-                  <div className="flex flex-wrap items-center gap-1.5 text-xs text-text-muted">
-                    {inst && inst.assigned_to && memberMap[inst.assigned_to] && (
-                      <span>{memberMap[inst.assigned_to]}</span>
-                    )}
-                    {inst && (
-                      <>
-                        <span>·</span>
-                        <span className={isOverdue ? "text-red-error font-semibold" : ""}>
-                          {inst.due_date === todayStr
-                            ? "Oggi"
-                            : new Date(inst.due_date + "T00:00:00").toLocaleDateString(
-                                "it-IT",
-                                {
-                                  day: "numeric",
-                                  month: "short",
-                                }
-                              )}
+                <EditTaskDialog
+                  task={task}
+                  members={members}
+                  currentDueDate={inst?.due_date}
+                  trigger={
+                    <button className="flex flex-1 items-center gap-3 text-left">
+                      <div className="flex flex-1 flex-col gap-0.5">
+                        <span className="font-semibold text-text-primary">
+                          {task.name}
                         </span>
-                      </>
-                    )}
-                    {task.recurrence_type !== "none" && (
-                      <>
-                        <span>·</span>
-                        <span className="text-green-fresh">Ricorrente</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-0.5">
-                    {Array.from({ length: task.points }).map((_, i) => (
-                      <span key={i} className="text-sm text-yellow-accent">
-                        ★
-                      </span>
-                    ))}
-                  </div>
-                  <EditTaskDialog
-                    task={task}
-                    members={members}
-                    currentDueDate={inst?.due_date}
-                    trigger={
-                      <button className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary">
-                        <Pencil size={16} />
-                      </button>
-                    }
-                  />
-                </div>
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-text-muted">
+                          {inst && inst.assigned_to && memberMap[inst.assigned_to] && (
+                            <span>{memberMap[inst.assigned_to]}</span>
+                          )}
+                          {inst && (
+                            <>
+                              <span>·</span>
+                              <span
+                                className={
+                                  isOverdue ? "text-red-error font-semibold" : ""
+                                }
+                              >
+                                {inst.due_date === todayStr
+                                  ? "Oggi"
+                                  : new Date(
+                                      inst.due_date + "T00:00:00"
+                                    ).toLocaleDateString("it-IT", {
+                                      day: "numeric",
+                                      month: "short",
+                                    })}
+                              </span>
+                            </>
+                          )}
+                          {task.recurrence_type !== "none" && (
+                            <>
+                              <span>·</span>
+                              <span className="text-green-fresh">Ricorrente</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: task.points }).map((_, i) => (
+                          <span key={i} className="text-sm text-yellow-accent">
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                    </button>
+                  }
+                />
               </div>
             );
           })}

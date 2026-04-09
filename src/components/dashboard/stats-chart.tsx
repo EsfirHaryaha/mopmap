@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 
 const COLORS = [
   "#4ADE80",
@@ -45,18 +45,10 @@ interface StatsChartProps {
   members: Member[];
   selectedMembers: Set<string>;
   period: string; // "7", "14", "30", or a year like "2026"
-  formatAsTime?: boolean;
 }
 
 function pad(n: number) {
   return n.toString().padStart(2, "0");
-}
-
-function formatMinutes(min: number): string {
-  if (min < 60) return `${min}m`;
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
 function generateDaySlots(days: number, step: number): { key: string; label: string }[] {
@@ -91,7 +83,6 @@ export function StatsChart({
   members,
   selectedMembers,
   period,
-  formatAsTime,
 }: StatsChartProps) {
   const memberColorMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -161,13 +152,11 @@ export function StatsChart({
 
   const visibleMembers = members.filter((m) => selectedMembers.has(m.user_id));
 
-  const tooltipFormatter = formatAsTime
-    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (value: any) => formatMinutes(Number(value))
-    : undefined;
-
   return (
-    <div className="h-52" style={{ minHeight: 208, minWidth: 0 }}>
+    <div
+      className="h-52 touch-none"
+      style={{ minHeight: 208, minWidth: 0, pointerEvents: "none" }}
+    >
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} barGap={1} barCategoryGap="20%">
           <XAxis
@@ -183,16 +172,6 @@ export function StatsChart({
             width={24}
             allowDecimals={false}
           />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#1F2937",
-              border: "1px solid #374151",
-              borderRadius: "8px",
-              fontSize: "12px",
-            }}
-            labelStyle={{ color: "#9CA3AF" }}
-            formatter={tooltipFormatter}
-          />
           {visibleMembers.map((m) => (
             <Bar
               key={m.user_id}
@@ -200,6 +179,7 @@ export function StatsChart({
               fill={memberColorMap.get(m.user_id)}
               radius={[4, 4, 0, 0]}
               maxBarSize={20}
+              isAnimationActive={false}
             />
           ))}
         </BarChart>

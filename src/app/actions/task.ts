@@ -333,7 +333,7 @@ export async function completeInstance(instanceId: string, durationSec?: number)
 
   // Always-available task (no due_date, no recurrence): just create a new dateless instance
   if (!instance.due_date && task.recurrence_type === "none") {
-    const nextAssigned = await getNextAssigned(instance.assigned_to);
+    const nextAssigned = await getNextAssigned(user.id);
     await supabase.from("task_instances").insert({
       task_id: task.id,
       house_id: task.house_id,
@@ -367,7 +367,7 @@ export async function completeInstance(instanceId: string, durationSec?: number)
   if ((completedForDate ?? 0) < dailyCount) {
     const nextAssigned =
       task.assignment_type === "rotation"
-        ? await getNextAssigned(instance.assigned_to)
+        ? await getNextAssigned(user.id)
         : instance.assigned_to;
 
     await supabase.from("task_instances").insert({
@@ -391,7 +391,7 @@ export async function completeInstance(instanceId: string, durationSec?: number)
     );
 
     if (nextDate) {
-      const nextAssigned = await getNextAssigned(instance.assigned_to);
+      const nextAssigned = await getNextAssigned(user.id);
       await supabase.from("task_instances").insert({
         task_id: task.id,
         house_id: task.house_id,
@@ -404,7 +404,7 @@ export async function completeInstance(instanceId: string, durationSec?: number)
       await supabase.from("tasks").update({ archived: true }).eq("id", task.id);
     } else {
       // No date, no recurrence but somehow got here: recreate dateless
-      const nextAssigned = await getNextAssigned(instance.assigned_to);
+      const nextAssigned = await getNextAssigned(user.id);
       await supabase.from("task_instances").insert({
         task_id: task.id,
         house_id: task.house_id,
@@ -463,5 +463,156 @@ export async function uncompleteInstance(instanceId: string) {
   revalidatePath(`/room/${task.room_id}`);
   revalidatePath("/my-tasks");
   revalidatePath("/stats");
+  return { success: true };
+}
+
+export async function updateCompletedInstance(
+  instanceId: string,
+  data: {
+    points_earned?: number;
+    completed_by?: string;
+    completed_at?: string;
+    duration_sec?: number | null;
+  }
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Non autenticato" };
+
+  const update: Record<string, unknown> = {};
+  if (data.points_earned !== undefined) update.points_earned = data.points_earned;
+  if (data.completed_by !== undefined) update.completed_by = data.completed_by;
+  if (data.completed_at !== undefined) update.completed_at = data.completed_at;
+  if (data.duration_sec !== undefined) update.duration_sec = data.duration_sec;
+
+  const { error } = await supabase
+    .from("task_instances")
+    .update(update)
+    .eq("id", instanceId);
+
+  if (error) return { error: "Errore nella modifica" };
+
+  revalidatePath("/stats");
+  revalidatePath("/stats/history");
+  revalidatePath("/my-tasks");
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+/**
+ * Annulla il completamento: rimette l'istanza a pending,
+ * cancella le pending auto-generate, mantiene duration_sec.
+ */
+export async function revertCompletedInstance(instanceId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Non autenticato" };
+
+  const { data: instance } = await supabase
+    .from("task_instances")
+    .select("id, task_id")
+    .eq("id", instanceId)
+    .eq("status", "completed")
+    .single();
+
+  if (!instance) return { error: "Istanza non trovata" };
+
+  // Delete all pending instances for this task (auto-generated after completion)
+  await supabase
+    .from("task_instances")
+    .delete()
+    .eq("task_id", instance.task_id)
+    .eq("status", "pending");
+
+  // Revert to pending: clear completion data, keep duration_sec and everything else
+  const { error } = await supabase
+    .from("task_instances")
+    .update({
+      status: "pending",
+      completed_at: null,
+      completed_by: null,
+    })
+    .eq("id", instanceId);
+
+  if (error) return { error: "Errore nell'annullamento" };
+
+  // Unarchive the task if it was archived by completion
+  const { data: task } = await supabase
+    .from("tasks")
+    .select("id, room_id, archived")
+    .eq("id", instance.task_id)
+    .single();
+
+  if (task?.archived) {
+    await supabase.from("tasks").update({ archived: false }).eq("id", task.id);
+  }
+
+  revalidatePath("/stats");
+  revalidatePath("/stats/history");
+  revalidatePath("/my-tasks");
+  revalidatePath("/dashboard");
+  if (task) revalidatePath(`/room/${task.room_id}`);
+  return { success: true };
+}
+
+/**
+ * Elimina: come revert ma azzera anche duration_sec.
+ */
+export async function deleteCompletedInstance(instanceId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Non autenticato" };
+
+  const { data: instance } = await supabase
+    .from("task_instances")
+    .select("id, task_id")
+    .eq("id", instanceId)
+    .eq("status", "completed")
+    .single();
+
+  if (!instance) return { error: "Istanza non trovata" };
+
+  // Delete all pending instances for this task (auto-generated after completion)
+  await supabase
+    .from("task_instances")
+    .delete()
+    .eq("task_id", instance.task_id)
+    .eq("status", "pending");
+
+  // Revert to pending and also clear duration_sec
+  const { error } = await supabase
+    .from("task_instances")
+    .update({
+      status: "pending",
+      completed_at: null,
+      completed_by: null,
+      duration_sec: null,
+    })
+    .eq("id", instanceId);
+
+  if (error) return { error: "Errore nell'eliminazione" };
+
+  // Unarchive the task if it was archived by completion
+  const { data: task } = await supabase
+    .from("tasks")
+    .select("id, room_id, archived")
+    .eq("id", instance.task_id)
+    .single();
+
+  if (task?.archived) {
+    await supabase.from("tasks").update({ archived: false }).eq("id", task.id);
+  }
+
+  revalidatePath("/stats");
+  revalidatePath("/stats/history");
+  revalidatePath("/my-tasks");
+  revalidatePath("/dashboard");
+  if (task) revalidatePath(`/room/${task.room_id}`);
   return { success: true };
 }

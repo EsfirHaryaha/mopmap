@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Trophy, Star, TrendingUp, BarChart3, Clock } from "lucide-react";
+import { Trophy, Star, TrendingUp, BarChart3, Clock, History } from "lucide-react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatsChart, COLORS } from "./stats-chart";
 
@@ -172,9 +173,17 @@ export function StatsContent({ completed, members, userId }: StatsContentProps) 
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary">Classifiche</h1>
-        <p className="text-sm text-text-muted">Chi pulisce di più?</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary">Classifiche</h1>
+          <p className="text-sm text-text-muted">Chi pulisce di più?</p>
+        </div>
+        <Link
+          href="/stats/history"
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-text-muted hover:bg-surface-hover hover:text-text-primary"
+        >
+          <History size={22} />
+        </Link>
       </div>
 
       {/* Period selector + member filter */}
@@ -281,7 +290,6 @@ export function StatsContent({ completed, members, userId }: StatsContentProps) 
             members={members}
             selectedMembers={selectedMembers}
             period={period}
-            formatAsTime
           />
         </CardContent>
       </Card>

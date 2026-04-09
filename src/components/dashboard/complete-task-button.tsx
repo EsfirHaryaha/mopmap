@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { completeInstance } from "@/app/actions/task";
 
 interface CompleteTaskButtonProps {
@@ -9,17 +10,16 @@ interface CompleteTaskButtonProps {
 
 export function CompleteTaskButton({ instanceId }: CompleteTaskButtonProps) {
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
+  const router = useRouter();
 
   async function handleComplete() {
-    if (loading || done) return;
+    if (loading) return;
     setLoading(true);
     const result = await completeInstance(instanceId);
-    setLoading(false);
-
     if (!result.error) {
-      setDone(true);
+      router.refresh();
     }
+    setLoading(false);
   }
 
   return (
@@ -30,24 +30,9 @@ export function CompleteTaskButton({ instanceId }: CompleteTaskButtonProps) {
         handleComplete();
       }}
       disabled={loading}
-      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${
-        done
-          ? "border-green-fresh bg-green-fresh text-background"
-          : "border-surface-border hover:border-green-fresh"
-      }`}
+      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 border-surface-border transition-colors hover:border-green-fresh"
     >
-      {done && (
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path
-            d="M3 7L6 10L11 4"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
-      {loading && !done && (
+      {loading && (
         <div className="h-3 w-3 animate-spin rounded-full border-2 border-text-muted border-t-transparent" />
       )}
     </button>

@@ -1,11 +1,11 @@
 import { Logo } from "@/components/ui/logo";
 import { Card, CardContent } from "@/components/ui/card";
 import { User } from "lucide-react";
-import { getUser, getMembership } from "@/lib/supabase/cached";
+import { getSessionUser, getMembership } from "@/lib/supabase/cached";
 import { ProfileForm } from "@/components/profile/profile-form";
 
 export default async function ProfilePage() {
-  const [user, membership] = await Promise.all([getUser(), getMembership()]);
+  const [user, membership] = await Promise.all([getSessionUser(), getMembership()]);
 
   const name = user?.user_metadata?.name || "";
   const inviteCode = membership?.house?.invite_code ?? null;

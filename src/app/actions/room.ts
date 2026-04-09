@@ -19,12 +19,13 @@ export async function createRoom(formData: FormData) {
   const supabase = await createClient();
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  if (!user) {
+  if (!session?.user) {
     return { error: "Non autenticato" };
   }
+  const user = session.user;
 
   const { error } = await supabase.from("rooms").insert({
     house_id: houseId,

@@ -14,12 +14,13 @@ export async function createHouse(formData: FormData) {
   const supabase = await createClient();
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  if (!user) {
+  if (!session?.user) {
     return { error: "Non autenticato" };
   }
+  const user = session.user;
 
   // Generate a unique house ID client-side so we can insert house + member
   // without needing to SELECT the house back (RLS blocks SELECT before membership)
@@ -83,12 +84,13 @@ export async function joinHouse(formData: FormData) {
   const supabase = await createClient();
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  if (!user) {
+  if (!session?.user) {
     return { error: "Non autenticato" };
   }
+  const user = session.user;
 
   // Find house by invite code
   // Note: this SELECT will fail if user is not a member (RLS).

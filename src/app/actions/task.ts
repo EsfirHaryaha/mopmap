@@ -22,9 +22,10 @@ export async function createTask(formData: FormData) {
 
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non autenticato" };
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return { error: "Non autenticato" };
+  const user = session.user;
 
   let recurrenceRule = null;
   if (recurrenceRuleRaw) {
@@ -99,6 +100,7 @@ export async function updateTask(formData: FormData) {
   const taskId = formData.get("taskId") as string;
   const name = formData.get("name") as string;
   const roomId = formData.get("roomId") as string;
+
   const description = (formData.get("description") as string) || null;
   const points = parseInt(formData.get("points") as string) || 0;
   const assignmentType = (formData.get("assignmentType") as string) || "manual";
@@ -113,9 +115,9 @@ export async function updateTask(formData: FormData) {
 
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non autenticato" };
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return { error: "Non autenticato" };
 
   let recurrenceRule = null;
   if (recurrenceRuleRaw) {
@@ -222,9 +224,9 @@ export async function deleteTask(formData: FormData) {
 
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non autenticato" };
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return { error: "Non autenticato" };
 
   // Delete pending instances (keep completed ones for history)
   await supabase
@@ -250,9 +252,9 @@ export async function archiveTask(formData: FormData) {
 
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non autenticato" };
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return { error: "Non autenticato" };
 
   // Delete all pending (future) instances
   await supabase
@@ -272,9 +274,10 @@ export async function archiveTask(formData: FormData) {
 export async function completeInstance(instanceId: string, durationSec?: number) {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non autenticato" };
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return { error: "Non autenticato" };
+  const user = session.user;
 
   // Get the instance + its task template
   const { data: instance } = await supabase
@@ -424,9 +427,9 @@ export async function completeInstance(instanceId: string, durationSec?: number)
 export async function uncompleteInstance(instanceId: string) {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non autenticato" };
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return { error: "Non autenticato" };
 
   const { data: instance } = await supabase
     .from("task_instances")
@@ -477,9 +480,9 @@ export async function updateCompletedInstance(
 ) {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non autenticato" };
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return { error: "Non autenticato" };
 
   const update: Record<string, unknown> = {};
   if (data.points_earned !== undefined) update.points_earned = data.points_earned;
@@ -508,9 +511,9 @@ export async function updateCompletedInstance(
 export async function revertCompletedInstance(instanceId: string) {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non autenticato" };
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return { error: "Non autenticato" };
 
   const { data: instance } = await supabase
     .from("task_instances")
@@ -565,9 +568,9 @@ export async function revertCompletedInstance(instanceId: string) {
 export async function deleteCompletedInstance(instanceId: string) {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Non autenticato" };
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return { error: "Non autenticato" };
 
   const { data: instance } = await supabase
     .from("task_instances")

@@ -31,15 +31,17 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
+  // getSession() validates JWT locally from cookie — no network call
+  // Much faster than getUser() which hits Supabase auth servers every time
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
   // Redirect unauthenticated users to login (except for public pages)
   const publicPaths = ["/", "/login", "/register", "/auth/callback"];
   const isPublicPath = publicPaths.some((path) => request.nextUrl.pathname === path);
 
-  if (!user && !isPublicPath) {
+  if (!session && !isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
@@ -47,7 +49,7 @@ export async function updateSession(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages
   if (
-    user &&
+    session &&
     (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/register")
   ) {
     const url = request.nextUrl.clone();
@@ -56,8 +58,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Pass user id via header so pages don't need to call getUser() again
-  if (user) {
-    supabaseResponse.headers.set("x-user-id", user.id);
+  if (session?.user) {
+    supabaseResponse.headers.set("x-user-id", session.user.id);
   }
 
   return supabaseResponse;

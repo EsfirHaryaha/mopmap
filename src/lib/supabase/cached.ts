@@ -3,25 +3,25 @@ import { headers } from "next/headers";
 import { createClient } from "./server";
 
 /**
- * Cached per-request: getUser() viene chiamato una sola volta
- * anche se layout + page lo invocano entrambi.
+ * Get user from session (local JWT decode, no network call).
+ * Use this instead of getUser() which hits Supabase auth servers.
  */
-export const getUser = cache(async () => {
+export const getSessionUser = cache(async () => {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
+    data: { session },
+  } = await supabase.auth.getSession();
+  return session?.user ?? null;
 });
 
 /**
- * Get user ID from middleware header (fast) or fallback to getUser().
+ * Get user ID from middleware header (fastest) or fallback to session.
  */
 export const getUserId = cache(async (): Promise<string | null> => {
   const h = await headers();
   const fromMiddleware = h.get("x-user-id");
   if (fromMiddleware) return fromMiddleware;
-  const user = await getUser();
+  const user = await getSessionUser();
   return user?.id ?? null;
 });
 

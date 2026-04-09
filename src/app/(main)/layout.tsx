@@ -1,26 +1,10 @@
 import { AppHeader } from "@/components/layout/app-header";
 import { BottomNav } from "@/components/layout/bottom-nav";
-import { createClient } from "@/lib/supabase/server";
+import { getMembership } from "@/lib/supabase/cached";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let houseName: string | null = null;
-  if (user) {
-    // Single query with join instead of two sequential queries
-    const { data: membership } = await supabase
-      .from("house_members")
-      .select("houses(name)")
-      .eq("user_id", user.id)
-      .limit(1)
-      .single();
-
-    houseName = (membership?.houses as unknown as { name: string })?.name ?? null;
-  }
+  const membership = await getMembership();
+  const houseName = membership?.house?.name ?? null;
 
   return (
     <div className="flex min-h-screen flex-col">

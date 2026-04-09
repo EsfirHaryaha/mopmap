@@ -184,7 +184,6 @@ export function CreateTaskWithRoomDialog({
                 name="name"
                 placeholder="Es. Lavare il pavimento"
                 required
-                autoFocus
               />
             </div>
 

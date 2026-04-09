@@ -4,6 +4,7 @@ import { JoinHouseDialog } from "@/components/dashboard/join-house-dialog";
 import { CreateRoomDialog } from "@/components/dashboard/create-room-dialog";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { createClient } from "@/lib/supabase/server";
+import { getMembership } from "@/lib/supabase/cached";
 
 function todayString() {
   const d = new Date();
@@ -12,22 +13,8 @@ function todayString() {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // Single query with join instead of two sequential queries
-  const { data: membership } = await supabase
-    .from("house_members")
-    .select("house_id, houses(id, name, invite_code)")
-    .eq("user_id", user!.id)
-    .limit(1)
-    .single();
-
-  const house = membership
-    ? (membership.houses as unknown as { id: string; name: string; invite_code: string })
-    : null;
+  const membership = await getMembership();
+  const house = membership?.house ?? null;
 
   if (!house) {
     return (
@@ -49,27 +36,37 @@ export default async function DashboardPage() {
     );
   }
 
-  // Fetch rooms, tasks, and members in parallel
-  const [{ data: roomData }, { data: allTasks }, { data: memberData }] =
-    await Promise.all([
-      supabase
-        .from("rooms")
-        .select("id, name, icon")
-        .eq("house_id", house.id)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("tasks")
-        .select(
-          "id, name, description, points, assignment_type, assigned_to, recurrence_type, recurrence_rule, daily_count, room_id"
-        )
-        .eq("house_id", house.id)
-        .eq("archived", false)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("house_members")
-        .select("user_id, profiles(name)")
-        .eq("house_id", house.id),
-    ]);
+  // Fetch rooms, tasks, members, and pending instances ALL in parallel
+  const [
+    { data: roomData },
+    { data: allTasks },
+    { data: memberData },
+    { data: allInstances },
+  ] = await Promise.all([
+    supabase
+      .from("rooms")
+      .select("id, name, icon")
+      .eq("house_id", house.id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("tasks")
+      .select(
+        "id, name, description, points, assignment_type, assigned_to, recurrence_type, recurrence_rule, daily_count, room_id"
+      )
+      .eq("house_id", house.id)
+      .eq("archived", false)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("house_members")
+      .select("user_id, profiles(name)")
+      .eq("house_id", house.id),
+    supabase
+      .from("task_instances")
+      .select("id, task_id, assigned_to, due_date")
+      .eq("house_id", house.id)
+      .eq("status", "pending")
+      .order("due_date", { ascending: true }),
+  ]);
 
   const rooms = roomData ?? [];
 
@@ -85,25 +82,14 @@ export default async function DashboardPage() {
     );
   }
 
-  // Fetch pending instances for all tasks
-  const taskIds = (allTasks ?? []).map((t) => t.id);
+  // Build instance map from parallel-fetched data
   const instanceMap: Record<
     string,
     { id: string; assigned_to: string | null; due_date: string }
   > = {};
-
-  if (taskIds.length > 0) {
-    const { data: instances } = await supabase
-      .from("task_instances")
-      .select("id, task_id, assigned_to, due_date")
-      .in("task_id", taskIds)
-      .eq("status", "pending")
-      .order("due_date", { ascending: true });
-
-    for (const inst of instances ?? []) {
-      if (!instanceMap[inst.task_id]) {
-        instanceMap[inst.task_id] = inst;
-      }
+  for (const inst of allInstances ?? []) {
+    if (!instanceMap[inst.task_id]) {
+      instanceMap[inst.task_id] = inst;
     }
   }
 

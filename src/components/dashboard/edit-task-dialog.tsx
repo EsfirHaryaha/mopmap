@@ -172,13 +172,7 @@ export function EditTaskDialog({
               >
                 Nome
               </label>
-              <Input
-                id="edit-name"
-                name="name"
-                defaultValue={task.name}
-                required
-                autoFocus
-              />
+              <Input id="edit-name" name="name" defaultValue={task.name} required />
             </div>
 
             <div className="flex flex-col gap-1.5">

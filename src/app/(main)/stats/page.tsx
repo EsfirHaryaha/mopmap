@@ -1,19 +1,10 @@
 import { StatsContent } from "@/components/dashboard/stats-content";
 import { createClient } from "@/lib/supabase/server";
+import { getUser, getMembership } from "@/lib/supabase/cached";
 
 export default async function StatsPage() {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: membership } = await supabase
-    .from("house_members")
-    .select("house_id")
-    .eq("user_id", user!.id)
-    .limit(1)
-    .single();
+  const [user, membership] = await Promise.all([getUser(), getMembership()]);
 
   if (!membership) {
     return (
@@ -25,7 +16,6 @@ export default async function StatsPage() {
     );
   }
 
-  // Fetch completed instances and members in parallel
   const [{ data: completed }, { data: memberData }] = await Promise.all([
     supabase
       .from("task_instances")

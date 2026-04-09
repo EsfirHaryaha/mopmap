@@ -76,6 +76,8 @@ export function getNextRotationMember(
   if (rotationOrder.length === 0) return null;
   const sorted = [...rotationOrder].sort((a, b) => a.position - b.position);
   const currentIdx = sorted.findIndex((r) => r.user_id === currentUserId);
+  // Se la persona non è nella rotazione, parti dal primo
+  if (currentIdx === -1) return sorted[0].user_id;
   const nextIdx = (currentIdx + 1) % sorted.length;
   return sorted[nextIdx].user_id;
 }

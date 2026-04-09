@@ -314,14 +314,18 @@ export async function completeInstance(instanceId: string, durationSec?: number)
   // Helper: get next assigned member for rotation
   async function getNextAssigned(currentAssigned: string | null) {
     if (task!.assignment_type === "fixed") return currentAssigned;
-    if (task!.assignment_type === "rotation" && currentAssigned) {
+    if (task!.assignment_type === "rotation") {
       const { data: rotation } = await supabase
         .from("task_rotation_order")
         .select("user_id, position")
         .eq("task_id", task!.id)
         .order("position", { ascending: true });
       if (rotation && rotation.length > 0) {
-        return getNextRotationMember(currentAssigned, rotation);
+        if (currentAssigned) {
+          return getNextRotationMember(currentAssigned, rotation);
+        }
+        // Se assigned_to era null, parti dal primo in rotazione
+        return rotation[0].user_id;
       }
     }
     return null;
@@ -374,7 +378,7 @@ export async function completeInstance(instanceId: string, durationSec?: number)
       points_earned: task.points,
     });
   } else {
-    // Daily count reached — next occurrence based on TODAY (actual completion date)
+    // Daily count reached — next occurrence based on TODAY
     const nextDate = getNextDueDate(
       todayStr,
       task.recurrence_type,

@@ -10,6 +10,7 @@ import { CreateTaskWithRoomDialog } from "@/components/dashboard/create-task-wit
 import { CompleteTaskButton } from "@/components/dashboard/complete-task-button";
 import { TaskTimerDialog } from "@/components/dashboard/task-timer-dialog";
 import { createClient } from "@/lib/supabase/server";
+import { getUser, getMembership } from "@/lib/supabase/cached";
 
 function pad(n: number) {
   return n.toString().padStart(2, "0");
@@ -49,24 +50,13 @@ interface Instance {
 
 export default async function MyTasksPage() {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: membership } = await supabase
-    .from("house_members")
-    .select("house_id")
-    .eq("user_id", user!.id)
-    .limit(1)
-    .single();
+  const [user, membership] = await Promise.all([getUser(), getMembership()]);
 
   let rooms: { id: string; name: string; icon: string }[] = [];
   let members: { user_id: string; name: string }[] = [];
   let instances: Instance[] = [];
 
   if (membership) {
-    // Fetch rooms, members, and instances in parallel
     const [{ data: roomData }, { data: memberData }, { data: instanceData }] =
       await Promise.all([
         supabase

@@ -23,7 +23,7 @@ export default async function DashboardPage() {
           <Home size={40} className="text-text-muted" />
         </div>
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold text-text-primary">Benvenuto su MOP MAP!</h1>
+          <h1 className="text-2xl font-bold text-text-primary">Benvenuto su Moppy!</h1>
           <p className="text-sm text-text-muted">
             Crea una nuova casa o unisciti a una esistente.
           </p>

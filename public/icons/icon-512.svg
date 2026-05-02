@@ -2,22 +2,21 @@
   <!-- Rounded square background -->
   <rect width="512" height="512" rx="108" ry="108" fill="#4ade80"/>
 
-  <!-- Spray bottle body -->
-  <rect x="240" y="212" width="112" height="172" rx="16" ry="16" fill="#0a0a0a"/>
+  <!-- Mop head (the cloth/rag part, zoomed in) -->
+  <!-- Main mop base -->
+  <rect x="96" y="186" width="320" height="64" rx="20" ry="20" fill="#0a0a0a"/>
 
-  <!-- Spray bottle neck -->
-  <rect x="262" y="164" width="44" height="58" rx="10" ry="10" fill="#0a0a0a"/>
+  <!-- Mop strands (the cencio fringes hanging down) -->
+  <path d="M116 250 Q112 310 104 370 Q100 394 108 394 Q116 394 120 368 Q126 330 130 250" fill="#0a0a0a" opacity="0.9"/>
+  <path d="M148 250 Q145 308 138 362 Q134 390 142 390 Q150 390 154 358 Q160 322 162 250" fill="#0a0a0a" opacity="0.85"/>
+  <path d="M180 250 Q176 316 170 374 Q166 402 174 402 Q182 402 186 370 Q192 332 194 250" fill="#0a0a0a" opacity="0.9"/>
+  <path d="M212 250 Q209 318 202 378 Q198 408 206 408 Q214 408 218 374 Q224 336 226 250" fill="#0a0a0a" opacity="0.85"/>
+  <path d="M244 250 Q241 322 234 384 Q230 414 238 414 Q246 414 250 380 Q256 340 258 250" fill="#0a0a0a" opacity="0.9"/>
+  <path d="M276 250 Q273 318 266 378 Q262 408 270 408 Q278 408 282 374 Q288 336 290 250" fill="#0a0a0a" opacity="0.85"/>
+  <path d="M308 250 Q305 308 298 362 Q294 390 302 390 Q310 390 314 358 Q320 322 322 250" fill="#0a0a0a" opacity="0.9"/>
+  <path d="M340 250 Q337 304 330 350 Q326 378 334 378 Q342 378 346 346 Q352 312 354 250" fill="#0a0a0a" opacity="0.85"/>
+  <path d="M372 250 Q369 296 362 336 Q358 362 366 362 Q374 362 378 332 Q384 300 386 250" fill="#0a0a0a" opacity="0.8"/>
 
-  <!-- Trigger -->
-  <path d="M240 254 Q192 254 182 290 L208 290 Q214 268 240 268 Z" fill="#0a0a0a"/>
-
-  <!-- Nozzle -->
-  <rect x="154" y="228" width="88" height="22" rx="11" ry="11" fill="#0a0a0a"/>
-
-  <!-- Spray mist dots -->
-  <circle cx="132" cy="206" r="11" fill="#0a0a0a" opacity="0.7"/>
-  <circle cx="106" cy="190" r="8" fill="#0a0a0a" opacity="0.5"/>
-  <circle cx="118" cy="168" r="7" fill="#0a0a0a" opacity="0.4"/>
-  <circle cx="90" cy="218" r="7" fill="#0a0a0a" opacity="0.4"/>
-  <circle cx="80" cy="180" r="5" fill="#0a0a0a" opacity="0.3"/>
+  <!-- Small handle stub on top (just a hint, not the full stick) -->
+  <rect x="234" y="120" width="44" height="74" rx="12" ry="12" fill="#0a0a0a"/>
 </svg>

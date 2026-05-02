@@ -1,4 +1,4 @@
-const CACHE_NAME = "mopmap-v1";
+const CACHE_NAME = "moppy-v1";
 
 // Install: skip waiting immediately
 self.addEventListener("install", () => {

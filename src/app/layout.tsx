@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MOPMAP",
+  title: "Moppy",
   description: "Organizza le pulizie di casa con i tuoi coinquilini",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "MOPMAP",
+    title: "Moppy",
   },
 };
 

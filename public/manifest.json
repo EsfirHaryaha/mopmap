@@ -1,6 +1,6 @@
 {
-  "name": "MOPMAP",
-  "short_name": "MOPMAP",
+  "name": "Moppy",
+  "short_name": "Moppy",
   "description": "Organizza le pulizie di casa con i tuoi coinquilini",
   "start_url": "/dashboard",
   "display": "standalone",

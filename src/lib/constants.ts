@@ -1,4 +1,4 @@
-export const APP_NAME = "MOPMAP";
+export const APP_NAME = "Moppy";
 export const APP_DESCRIPTION = "Organizza le pulizie di casa con i tuoi coinquilini";
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
